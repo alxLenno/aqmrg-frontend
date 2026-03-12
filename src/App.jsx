@@ -13,7 +13,31 @@ import './App.css';
 /**
  * AQMRG Dashboard — Main Application
  */
+console.log("%c [AQMRG] Initializing Build v1.0.1", "color: #3b82f6; font-weight: bold;");
+
 export default function App() {
+  const [renderError, setRenderError] = useState(null);
+
+  // Global error handler for uncaught runtime errors during render
+  useEffect(() => {
+    const handleError = (e) => {
+      console.error("Caught global error:", e);
+      setRenderError(e.message || "Unknown Runtime Error");
+    };
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (renderError) {
+    return (
+      <div style={{ padding: '40px', color: 'white', background: '#0f172a', height: '100vh' }}>
+        <h1>Application Crushed</h1>
+        <p>Error: {renderError}</p>
+        <button onClick={() => window.location.reload()}>Reload</button>
+      </div>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
