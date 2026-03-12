@@ -16,6 +16,23 @@ import './App.css';
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Missing state variables for data fetching
+  const [sensors, setSensors] = useState([]);
+  const [sensorsCount, setSensorsCount] = useState(0);
+  const [timestamp, setTimestamp] = useState(null);
+  const [apiStatus, setApiStatus] = useState('connecting');
+  const [failCount, setFailCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [forecast, setForecast] = useState(null);
+  const [forecastLoading, setForecastLoading] = useState(true);
+  const [forecastError, setForecastError] = useState(null);
+  const [showSyncAlert, setShowSyncAlert] = useState(false);
+
+  // Sidebar handlers
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const closeSidebar = () => setIsSidebarOpen(false);
   // Fetch real sensor data from the database
   const loadDashboardData = useCallback(async () => {
     try {
