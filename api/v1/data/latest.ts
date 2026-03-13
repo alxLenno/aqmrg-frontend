@@ -43,12 +43,17 @@ export default async function handler(
     });
 
     // Overlay PA (fresher than MongoDB)
+    const seenInPa = new Set<string>();
     paSensors.forEach((s: any) => {
-      mergedMap.set(s.device_id || 'unknown', { 
-        ...s, 
-        sensor_name: s.sensor_name || 'Data Entry Controller',
-        status: 'ControllerData' 
-      });
+      const deviceId = s.device_id || 'unknown';
+      if (!seenInPa.has(deviceId)) {
+        seenInPa.add(deviceId);
+        mergedMap.set(deviceId, { 
+          ...s, 
+          sensor_name: s.sensor_name || 'Data Entry Controller',
+          status: 'ControllerData' 
+        });
+      }
     });
 
     const allSensors = Array.from(mergedMap.values());
