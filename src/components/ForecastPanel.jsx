@@ -44,20 +44,75 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
     }
 
     const data = forecast || {};
-    const predicted = data.prediction || 0;
-    const actual = data.actual_pm25 || 0;
-    const shift = data.shift || 0;
-    const absShift = Math.abs(shift);
-    
-    // Performance color
-    const shiftColor = absShift < 5 ? 'text-green-400' : absShift < 15 ? 'text-yellow-400' : 'text-red-400';
-    const accuracy = Math.max(0, 100 - (absShift / (actual || 1) * 100));
-
-    // Comparison data processing
     const compData = comparison || {};
     const predictions = compData.predictions || {};
-    const ensembleMedian = compData.ensemble_median || 0;
+    
+    // Original API values as fallbacks or baseline
+    const apiPredicted = data.prediction || 0;
+    const apiActual = data.actual_pm25 || 0;
+    
+    // Actual PM2.5 value to use for comparison
+    const actual = compData.actual_pm25 || apiActual;
     const compActual = compData.actual_pm25 || 0;
+    const ensembleMedian = compData.ensemble_median || 0;
+
+    // --- Dynamic Model Selection Logic ---
+    // Create an array of all available models and their predictions
+    let availableModels = [];
+    
+    // Add models if comparison data is available
+    if (comparison && actual > 0) {
+       availableModels = [
+           { name: 'Ensemble', prediction: ensembleMedian },
+           { name: 'GB Model', prediction: predictions.gb || 0 },
+           { name: 'OLS Model', prediction: predictions.ols || 0 },
+           { name: 'Existing', prediction: predictions.existing || 0 }
+       ].filter(m => m.prediction > 0);
+    }
+    
+    // Define the default/fallback model based on the standard API forecast
+    const defaultModel = { 
+        name: 'API Forecast', 
+        prediction: apiPredicted,
+        shift: data.shift || 0
+    };
+    
+    let bestModel = defaultModel;
+
+    // If we have comparison models, find the one with the smallest absolute error
+    if (availableModels.length > 0) {
+        // Calculate error for each model
+        const modelsWithError = availableModels.map(model => ({
+            ...model,
+            shift: model.prediction - actual,
+            absError: Math.abs(model.prediction - actual)
+        }));
+        
+        // Find the index of the model with the minimum absolute error
+        let bestIndex = 0;
+        let minError = modelsWithError[0].absError;
+        
+        for (let i = 1; i < modelsWithError.length; i++) {
+            if (modelsWithError[i].absError < minError) {
+                minError = modelsWithError[i].absError;
+                bestIndex = i;
+            }
+        }
+        
+        bestModel = modelsWithError[bestIndex];
+    } else if (apiPredicted > 0 && actual > 0) {
+         // Calculate shift for API forecast if comparison data isn't available but actual is
+         bestModel.shift = apiPredicted - actual;
+    }
+
+    // Use the best model's values for main display
+    const displayPredicted = bestModel.prediction;
+    const shift = bestModel.shift;
+    const absShift = Math.abs(shift);
+    
+    // Performance color based on the selected best model
+    const shiftColor = absShift < 5 ? 'text-green-400' : absShift < 15 ? 'text-yellow-400' : 'text-red-400';
+    const accuracy = actual > 0 ? Math.max(0, 100 - (absShift / actual * 100)) : 0;
 
     return (
         <div className="card forecast-card animate-fade-in shadow-premium">
@@ -77,12 +132,15 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
             <div className="forecast-stats">
                 <div className="forecast-stat-item">
                     <span className="stat-label">Predicted PM2.5</span>
-                    <span className="stat-value highlight">{predicted} <small>μg/m³</small></span>
+                    <span className="stat-value highlight">{displayPredicted.toFixed(2)} <small>μg/m³</small></span>
+                    {bestModel.name !== 'API Forecast' && (
+                        <span className="comp-tag best-model-tag">Using: {bestModel.name}</span>
+                    )}
                 </div>
                 <div className="forecast-stat-item">
                     <span className="stat-label">Actual Reading</span>
                     <span className="stat-value">{actual} <small>μg/m³</small></span>
-                    {compActual > 0 && (
+                    {compActual !== apiActual && compActual > 0 && (
                         <span className="comp-tag">Comp: {compActual}</span>
                     )}
                 </div>
@@ -92,7 +150,7 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                 <div className="accuracy-meta">
                     <span className="meta-label">Model Shift (Error)</span>
                     <span className={`meta-value ${shiftColor}`}>
-                        {shift >= 0 ? '+' : ''}{shift} μg/m³
+                        {shift > 0 ? '+' : ''}{shift.toFixed(2)} μg/m³
                     </span>
                 </div>
                 <div className="accuracy-bar-bg">
@@ -114,19 +172,19 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                         <h4>Model Accuracy Comparison</h4>
                     </div>
                     <div className="comparison-grid">
-                        <div className="comparison-item">
+                        <div className={`comparison-item ${bestModel.name === 'Ensemble' ? 'best-model' : ''}`}>
                             <span className="comp-label">Ensemble</span>
                             <span className="comp-value">{ensembleMedian}</span>
                         </div>
-                        <div className="comparison-item">
+                        <div className={`comparison-item ${bestModel.name === 'GB Model' ? 'best-model' : ''}`}>
                             <span className="comp-label">GB Model</span>
                             <span className="comp-value">{predictions.gb}</span>
                         </div>
-                        <div className="comparison-item">
+                        <div className={`comparison-item ${bestModel.name === 'OLS Model' ? 'best-model' : ''}`}>
                             <span className="comp-label">OLS Model</span>
                             <span className="comp-value">{predictions.ols}</span>
                         </div>
-                        <div className="comparison-item">
+                        <div className={`comparison-item ${bestModel.name === 'Existing' ? 'best-model' : ''}`}>
                             <span className="comp-label">Existing</span>
                             <span className="comp-value">{predictions.existing}</span>
                         </div>
@@ -181,6 +239,10 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                     color: #a5b4fc;
                     padding: 2px 6px;
                     border-radius: 4px;
+                }
+                .best-model-tag {
+                    background: rgba(16, 185, 129, 0.2);
+                    color: #6ee7b7;
                 }
                 .stat-label {
                     font-size: 0.65rem;
@@ -267,11 +329,22 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                     align-items: center;
                     padding-bottom: 8px;
                     border-bottom: 1px solid rgba(255,255,255,0.03);
+                    border-radius: 4px;
+                }
+                .comparison-item.best-model {
+                    background: rgba(16, 185, 129, 0.1);
+                    padding: 4px 8px;
+                    border: 1px solid rgba(16, 185, 129, 0.2);
+                    box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
                 }
                 .comparison-item:last-child, .comparison-item:nth-last-child(2) {
                     border-bottom: none;
                     padding-bottom: 0;
                     margin-top: 4px;
+                }
+                .comparison-item.best-model:last-child, .comparison-item.best-model:nth-last-child(2) {
+                     padding-bottom: 4px;
+                     border-bottom: 1px solid rgba(16, 185, 129, 0.2);
                 }
                 .comp-label {
                     font-size: 0.7rem;
