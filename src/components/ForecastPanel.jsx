@@ -131,18 +131,22 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
 
             <div className="forecast-stats">
                 <div className="forecast-stat-item">
-                    <span className="stat-label">Predicted PM2.5</span>
+                    <div className="stat-header">
+                        <span className="stat-label">Predicted PM2.5</span>
+                        {bestModel.name !== 'API Forecast' && (
+                            <span className="comp-tag best-model-tag">Using: {bestModel.name}</span>
+                        )}
+                    </div>
                     <span className="stat-value highlight">{displayPredicted.toFixed(2)} <small>μg/m³</small></span>
-                    {bestModel.name !== 'API Forecast' && (
-                        <span className="comp-tag best-model-tag">Using: {bestModel.name}</span>
-                    )}
                 </div>
                 <div className="forecast-stat-item">
-                    <span className="stat-label">Actual Reading</span>
+                    <div className="stat-header">
+                        <span className="stat-label">Actual Reading</span>
+                        {compActual !== apiActual && compActual > 0 && (
+                            <span className="comp-tag">Comp: {compActual}</span>
+                        )}
+                    </div>
                     <span className="stat-value">{actual} <small>μg/m³</small></span>
-                    {compActual !== apiActual && compActual > 0 && (
-                        <span className="comp-tag">Comp: {compActual}</span>
-                    )}
                 </div>
             </div>
 
@@ -228,17 +232,20 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                     background: rgba(255,255,255,0.02);
                     border-radius: 12px;
                     border: 1px solid rgba(255,255,255,0.03);
-                    position: relative;
+                }
+                .stat-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    gap: 8px;
                 }
                 .comp-tag {
-                    position: absolute;
-                    top: 8px;
-                    right: 8px;
                     font-size: 0.6rem;
                     background: rgba(99, 102, 241, 0.2);
                     color: #a5b4fc;
                     padding: 2px 6px;
                     border-radius: 4px;
+                    white-space: nowrap;
                 }
                 .best-model-tag {
                     background: rgba(16, 185, 129, 0.2);
