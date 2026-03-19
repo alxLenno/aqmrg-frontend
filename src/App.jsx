@@ -7,7 +7,7 @@ import SensorDetailTab from './components/SensorDetailTab';
 import YourDataTab from './components/YourDataTab';
 import RawAnalysisTab from './components/RawAnalysisTab';
 import ForecastPanel from './components/ForecastPanel';
-import { fetchDashboardData, fetchForecast, checkHealth } from './api/dashboard';
+import { fetchDashboardData, fetchForecast, fetchForecastComparison, checkHealth } from './api/dashboard';
 import './App.css';
 
 /**
@@ -52,6 +52,8 @@ export default function App() {
   const [forecast, setForecast] = useState(null);
   const [forecastLoading, setForecastLoading] = useState(true);
   const [forecastError, setForecastError] = useState(null);
+  const [comparison, setComparison] = useState(null);
+  const [comparisonLoading, setComparisonLoading] = useState(true);
   const [showSyncAlert, setShowSyncAlert] = useState(false);
 
   // Sidebar handlers
@@ -92,14 +94,23 @@ export default function App() {
   const loadForecast = useCallback(async () => {
     try {
       setForecastLoading(true);
-      const data = await fetchForecast('Nairobi', 4);
-      setForecast(data);
+      setComparisonLoading(true);
+      
+      // Fetch both forecast and comparison in parallel
+      const [forecastData, comparisonData] = await Promise.all([
+        fetchForecast('Nairobi', 4),
+        fetchForecastComparison()
+      ]);
+      
+      setForecast(forecastData);
+      setComparison(comparisonData);
       setForecastError(null);
     } catch (err) {
-      console.error('Forecast Error:', err);
+      console.error('Forecast/Comparison Error:', err);
       setForecastError(err.message);
     } finally {
       setForecastLoading(false);
+      setComparisonLoading(false);
     }
   }, []);
 
@@ -191,7 +202,12 @@ export default function App() {
             <StatsGrid sensors={sensors} loading={loading} />
             <section className="bottom-row">
               <SensorList sensors={sensors} loading={loading} timestamp={timestamp} />
-              <ForecastPanel forecast={forecast} loading={forecastLoading} error={forecastError} />
+                <ForecastPanel 
+                  forecast={forecast} 
+                  comparison={comparison}
+                  loading={forecastLoading || comparisonLoading} 
+                  error={forecastError} 
+                />
             </section>
           </>
         ) : activeTab === 'sensors' ? (

@@ -3,7 +3,7 @@
  * Data comes from GET /api/v1/predictions/forecast → model-serving-service (FastAPI).
  * When the backend is running, this shows real ML model output.
  */
-export default function ForecastPanel({ forecast, loading, error }) {
+export default function ForecastPanel({ forecast, comparison, loading, error }) {
     if (loading) {
         return (
             <div className="card forecast-card">
@@ -53,6 +53,12 @@ export default function ForecastPanel({ forecast, loading, error }) {
     const shiftColor = absShift < 5 ? 'text-green-400' : absShift < 15 ? 'text-yellow-400' : 'text-red-400';
     const accuracy = Math.max(0, 100 - (absShift / (actual || 1) * 100));
 
+    // Comparison data processing
+    const compData = comparison || {};
+    const predictions = compData.predictions || {};
+    const ensembleMedian = compData.ensemble_median || 0;
+    const compActual = compData.actual_pm25 || 0;
+
     return (
         <div className="card forecast-card animate-fade-in shadow-premium">
             <div className="card-header">
@@ -76,6 +82,9 @@ export default function ForecastPanel({ forecast, loading, error }) {
                 <div className="forecast-stat-item">
                     <span className="stat-label">Actual Reading</span>
                     <span className="stat-value">{actual} <small>μg/m³</small></span>
+                    {compActual > 0 && (
+                        <span className="comp-tag">Comp: {compActual}</span>
+                    )}
                 </div>
             </div>
 
@@ -98,13 +107,40 @@ export default function ForecastPanel({ forecast, loading, error }) {
                 <span className="accuracy-pct">{accuracy.toFixed(1)}% Alignment Confidence</span>
             </div>
 
+            {/* Comparison Section */}
+            {comparison && (
+                <div className="comparison-container">
+                    <div className="comparison-header">
+                        <h4>Model Accuracy Comparison</h4>
+                    </div>
+                    <div className="comparison-grid">
+                        <div className="comparison-item">
+                            <span className="comp-label">Ensemble</span>
+                            <span className="comp-value">{ensembleMedian}</span>
+                        </div>
+                        <div className="comparison-item">
+                            <span className="comp-label">GB Model</span>
+                            <span className="comp-value">{predictions.gb}</span>
+                        </div>
+                        <div className="comparison-item">
+                            <span className="comp-label">OLS Model</span>
+                            <span className="comp-value">{predictions.ols}</span>
+                        </div>
+                        <div className="comparison-item">
+                            <span className="comp-label">Existing</span>
+                            <span className="comp-value">{predictions.existing}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="forecast-location" style={{ marginTop: '16px' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
                 </svg>
                 <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                    Last validation: {data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : 'Just now'}
+                    Last validation: {compData.timestamp || data.timestamp ? new Date(compData.timestamp || data.timestamp).toLocaleTimeString() : 'Just now'}
                 </span>
             </div>
 
@@ -134,6 +170,17 @@ export default function ForecastPanel({ forecast, loading, error }) {
                     background: rgba(255,255,255,0.02);
                     border-radius: 12px;
                     border: 1px solid rgba(255,255,255,0.03);
+                    position: relative;
+                }
+                .comp-tag {
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    font-size: 0.6rem;
+                    background: rgba(99, 102, 241, 0.2);
+                    color: #a5b4fc;
+                    padding: 2px 6px;
+                    border-radius: 4px;
                 }
                 .stat-label {
                     font-size: 0.65rem;
@@ -194,6 +241,49 @@ export default function ForecastPanel({ forecast, loading, error }) {
                     text-align: right;
                     font-family: 'JetBrains Mono', monospace;
                 }
+                
+                .comparison-container {
+                    margin-top: 20px;
+                    padding: 12px;
+                    background: rgba(255,255,255,0.02);
+                    border-radius: 12px;
+                    border: 1px solid rgba(255,255,255,0.03);
+                }
+                .comparison-header h4 {
+                    font-size: 0.75rem;
+                    color: #94a3b8;
+                    margin-bottom: 12px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                .comparison-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 12px;
+                }
+                .comparison-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding-bottom: 8px;
+                    border-bottom: 1px solid rgba(255,255,255,0.03);
+                }
+                .comparison-item:last-child, .comparison-item:nth-last-child(2) {
+                    border-bottom: none;
+                    padding-bottom: 0;
+                    margin-top: 4px;
+                }
+                .comp-label {
+                    font-size: 0.7rem;
+                    color: #64748b;
+                }
+                .comp-value {
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    color: #e2e8f0;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+
                 .shadow-premium {
                     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
                 }

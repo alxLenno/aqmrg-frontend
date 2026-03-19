@@ -111,6 +111,18 @@ export async function fetchForecast(location = 'Nairobi', hours = 4) {
 }
 
 /**
+ * Fetch forecast comparison data from the PythonAnywhere backend.
+ * Endpoint: GET /api/v1/forecast/comparison
+ */
+export async function fetchForecastComparison() {
+    const response = await fetch(`${API_BASE}/v1/forecast/comparison`);
+    if (!response.ok) {
+        throw new Error(`Comparison API error: ${response.status}`);
+    }
+    return response.json();
+}
+
+/**
  * Fetch global historical data for EDA.
  * Endpoint: GET /api/v1/history/all
  */
