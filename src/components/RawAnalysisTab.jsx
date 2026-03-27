@@ -366,58 +366,54 @@ export default function RawAnalysisTab() {
                 }
                 .date-picker-wrapper label {
                     font-size: 0.7rem;
-                    color: #64748b;
+                    color: var(--text-secondary);
                     text-transform: uppercase;
                     letter-spacing: 0.05em;
                 }
                 .date-input {
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,255,255,0.1);
+                    background: var(--bg-card);
+                    border: 1px solid var(--border);
                     border-radius: 8px;
-                    color: #fff;
+                    color: var(--text-primary);
                     padding: 6px 12px;
                     font-size: 0.85rem;
                     outline: none;
                 }
-                .date-input::-webkit-calendar-picker-indicator {
-                    filter: invert(1);
-                    cursor: pointer;
-                }
                 .title-group h1 {
                     font-size: 1.8rem;
-                    background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+                    background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
                 }
                 .title-group p {
-                    color: #94a3b8;
+                    color: var(--text-secondary);
                     font-size: 0.9rem;
                 }
                 .bucket-nav {
                     display: flex;
-                    background: rgba(255,255,255,0.03);
+                    background: var(--bg-card);
                     padding: 4px;
                     border-radius: 12px;
-                    border: 1px solid rgba(255,255,255,0.05);
+                    border: 1px solid var(--border);
                 }
                 .bucket-btn {
                     padding: 8px 16px;
                     border-radius: 8px;
                     border: none;
                     background: transparent;
-                    color: #94a3b8;
+                    color: var(--text-secondary);
                     cursor: pointer;
                     font-size: 0.85rem;
                     transition: all 0.2s ease;
                 }
                 .bucket-btn:hover {
-                    color: #fff;
-                    background: rgba(255,255,255,0.05);
+                    color: var(--text-primary);
+                    background: var(--bg-card-hover);
                 }
                 .bucket-btn.active {
-                    background: #3b82f6;
+                    background: var(--accent);
                     color: #fff;
-                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                    box-shadow: 0 4px 12px var(--accent-glow);
                 }
                 .analysis-grid {
                     display: grid;
@@ -425,11 +421,10 @@ export default function RawAnalysisTab() {
                     gap: 24px;
                 }
                 .analysis-card {
-                    background: rgba(30, 41, 59, 0.5);
-                    border: 1px solid rgba(255,255,255,0.05);
+                    background: var(--bg-card);
+                    border: 1px solid var(--border);
                     border-radius: 20px;
                     padding: 24px;
-                    backdrop-filter: blur(10px);
                 }
                 .card-top {
                     display: flex;
@@ -440,14 +435,14 @@ export default function RawAnalysisTab() {
                 .card-top h3 {
                     font-size: 1.1rem;
                     font-weight: 500;
-                    color: #f8fafc;
+                    color: var(--text-primary);
                 }
                 .unit-tag {
                     font-size: 0.75rem;
-                    background: rgba(255,255,255,0.05);
+                    background: var(--bg-secondary);
                     padding: 4px 10px;
                     border-radius: 6px;
-                    color: #94a3b8;
+                    color: var(--text-secondary);
                 }
                 .chart-pair {
                     display: grid;
@@ -463,7 +458,7 @@ export default function RawAnalysisTab() {
                     font-size: 0.75rem;
                     text-transform: uppercase;
                     letter-spacing: 0.05em;
-                    color: #64748b;
+                    color: var(--text-secondary);
                 }
                 @media (max-width: 1024px) {
                     .chart-pair {

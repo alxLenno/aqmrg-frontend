@@ -8,6 +8,7 @@ import YourDataTab from './components/YourDataTab';
 import RawAnalysisTab from './components/RawAnalysisTab';
 import ForecastPanel from './components/ForecastPanel';
 import { fetchDashboardData, fetchForecast, fetchForecastComparison, checkHealth } from './api/dashboard';
+import ThemeToggle from './components/ThemeToggle';
 import './App.css';
 
 /**
@@ -224,6 +225,8 @@ export default function App() {
           </div>
         )}
       </main>
+
+      <ThemeToggle />
     </div>
   );
 }

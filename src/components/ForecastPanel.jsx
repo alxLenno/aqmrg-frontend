@@ -208,9 +208,8 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
 
             <style jsx>{`
                 .forecast-card {
-                    background: rgba(15, 23, 42, 0.4);
-                    backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255,255,255,0.08);
+                    background: var(--bg-card);
+                    border: 1px solid var(--border);
                 }
                 .intelligence-icon {
                     background: rgba(99, 102, 241, 0.1);
@@ -229,9 +228,9 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                     flex-direction: column;
                     gap: 4px;
                     padding: 12px;
-                    background: rgba(255,255,255,0.02);
+                    background: var(--bg-secondary);
                     border-radius: 12px;
-                    border: 1px solid rgba(255,255,255,0.03);
+                    border: 1px solid var(--border);
                 }
                 .stat-header {
                     display: flex;
@@ -241,43 +240,43 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                 }
                 .comp-tag {
                     font-size: 0.6rem;
-                    background: rgba(99, 102, 241, 0.2);
-                    color: #a5b4fc;
+                    background: rgba(99, 102, 241, 0.15);
+                    color: var(--accent);
                     padding: 2px 6px;
                     border-radius: 4px;
                     white-space: nowrap;
                 }
                 .best-model-tag {
-                    background: rgba(16, 185, 129, 0.2);
-                    color: #6ee7b7;
+                    background: rgba(16, 185, 129, 0.15);
+                    color: var(--aqi-good);
                 }
                 .stat-label {
                     font-size: 0.65rem;
                     text-transform: uppercase;
-                    color: #64748b;
+                    color: var(--text-secondary);
                     letter-spacing: 0.08em;
                     font-weight: 600;
                 }
                 .stat-value {
                     font-size: 1.4rem;
                     font-weight: 700;
-                    color: #f8fafc;
+                    color: var(--text-primary);
                 }
                 .stat-value.highlight {
-                    color: #818cf8;
+                    color: var(--accent);
                 }
                 .stat-value small {
                     font-size: 0.7rem;
                     font-weight: 400;
-                    color: #64748b;
+                    color: var(--text-secondary);
                 }
                 .accuracy-section {
                     padding: 16px;
                     border-radius: 16px;
-                    border: 1px solid rgba(255,255,255,0.06);
+                    border: 1px solid var(--border);
                 }
                 .glass-fill {
-                    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+                    background: var(--bg-secondary);
                 }
                 .accuracy-meta {
                     display: flex;
@@ -285,18 +284,17 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                     margin-bottom: 10px;
                     font-size: 0.8rem;
                 }
-                .meta-label { color: #94a3b8; font-weight: 500; }
-                .text-green-400 { color: #34d399; }
-                .text-yellow-400 { color: #fbbf24; }
-                .text-red-400 { color: #f87171; }
+                .meta-label { color: var(--text-secondary); font-weight: 500; }
+                .text-green-400 { color: var(--aqi-good); }
+                .text-yellow-400 { color: var(--aqi-moderate); }
+                .text-red-400 { color: var(--aqi-unhealthy); }
                 
                 .accuracy-bar-bg {
                     height: 8px;
-                    background: rgba(0,0,0,0.2);
+                    background: var(--border);
                     border-radius: 4px;
                     overflow: hidden;
                     margin-bottom: 10px;
-                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
                 }
                 .accuracy-bar-fill {
                     height: 100%;
@@ -305,7 +303,7 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                 }
                 .accuracy-pct {
                     font-size: 0.75rem;
-                    color: #94a3b8;
+                    color: var(--text-secondary);
                     display: block;
                     text-align: right;
                     font-family: 'JetBrains Mono', monospace;
@@ -314,13 +312,13 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                 .comparison-container {
                     margin-top: 20px;
                     padding: 12px;
-                    background: rgba(255,255,255,0.02);
+                    background: var(--bg-secondary);
                     border-radius: 12px;
-                    border: 1px solid rgba(255,255,255,0.03);
+                    border: 1px solid var(--border);
                 }
                 .comparison-header h4 {
                     font-size: 0.75rem;
-                    color: #94a3b8;
+                    color: var(--text-secondary);
                     margin-bottom: 12px;
                     text-transform: uppercase;
                     letter-spacing: 0.05em;
@@ -335,7 +333,7 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                     justify-content: space-between;
                     align-items: center;
                     padding-bottom: 8px;
-                    border-bottom: 1px solid rgba(255,255,255,0.03);
+                    border-bottom: 1px solid var(--border);
                     border-radius: 4px;
                 }
                 .comparison-item.best-model {
@@ -355,17 +353,17 @@ export default function ForecastPanel({ forecast, comparison, loading, error }) 
                 }
                 .comp-label {
                     font-size: 0.7rem;
-                    color: #64748b;
+                    color: var(--text-secondary);
                 }
                 .comp-value {
                     font-size: 0.85rem;
                     font-weight: 600;
-                    color: #e2e8f0;
+                    color: var(--text-primary);
                     font-family: 'JetBrains Mono', monospace;
                 }
 
                 .shadow-premium {
-                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
                 }
             `}</style>
         </div>
