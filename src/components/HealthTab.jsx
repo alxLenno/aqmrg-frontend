@@ -102,6 +102,20 @@ export default function HealthTab({ selectedDevice = '' }) {
                                     ))}
                                 </div>
                             </div>
+
+                            {healthLogs[0].issues?.length > 0 && (
+                                <div className="health-issues" style={{ marginTop: '20px', padding: '15px', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                                    <span className="health-section-title" style={{ color: 'var(--aqi-unhealthy)' }}>Recommended Actions</span>
+                                    {healthLogs[0].issues.map((issue, i) => (
+                                        <div key={i} style={{ marginTop: '10px', fontSize: '0.9rem' }}>
+                                            <div style={{ fontWeight: 'bold' }}>⚠️ {issue}</div>
+                                            <div style={{ color: 'var(--text-secondary)', marginLeft: '22px', fontSize: '0.85rem', marginTop: '4px' }}>
+                                                👉 {getMitigation(issue)}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -169,8 +183,8 @@ export default function HealthTab({ selectedDevice = '' }) {
                                 </div>
 
                                 {issues > 0 && (
-                                    <div style={{ fontSize: '11px', color: 'var(--aqi-unhealthy)', marginTop: '4px', fontWeight: 'bold' }}>
-                                        ⚠️ {issues} Diagnostic Issue{issues !== 1 ? 's' : ''}
+                                    <div style={{ fontSize: '11px', color: 'var(--aqi-unhealthy)', marginTop: '4px', fontStyle: 'italic' }}>
+                                        Tip: {getMitigation(log.issues[0])}
                                     </div>
                                 )}
                             </div>
@@ -180,4 +194,24 @@ export default function HealthTab({ selectedDevice = '' }) {
             )}
         </div>
     );
+}
+
+/**
+ * Mitigation Engine: Translates technical hardware errors into actionable advice.
+ */
+function getMitigation(issue) {
+    const text = issue.toLowerCase();
+    if (text.includes('pms5003 offline')) {
+        return "Check 5V power rail and Serial3 RX/TX jumper wires.";
+    }
+    if (text.includes('sgp41 error 268') || text.includes('sgp41 self test error')) {
+        return "Possible I2C contention. Check SDA/SCL pull-ups and common ground.";
+    }
+    if (text.includes('low signal') || text.includes('csq')) {
+        return "Position GSM antenna away from metal or check SIM data balance.";
+    }
+    if (text.includes('http') || text.includes('failed requests')) {
+        return "Check GPRS coverage or server uptime at aqmrg.pythonanywhere.com.";
+    }
+    return "Perform a hard reset by pressing the RESET button on the Arduino Due.";
 }
