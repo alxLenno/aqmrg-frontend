@@ -7,7 +7,9 @@ import SensorDetailTab from './components/SensorDetailTab';
 import YourDataTab from './components/YourDataTab';
 import RawAnalysisTab from './components/RawAnalysisTab';
 import ForecastPanel from './components/ForecastPanel';
-import { fetchDashboardData, fetchForecast, fetchForecastComparison, checkHealth } from './api/dashboard';
+import MapPanel from './components/MapPanel';
+import HealthTab from './components/HealthTab';
+import { fetchDashboardData, fetchForecast, fetchForecastComparison, fetchDevices, checkHealth } from './api/dashboard';
 import ThemeToggle from './components/ThemeToggle';
 import './App.css';
 
@@ -56,6 +58,8 @@ export default function App() {
   const [comparison, setComparison] = useState(null);
   const [comparisonLoading, setComparisonLoading] = useState(true);
   const [showSyncAlert, setShowSyncAlert] = useState(false);
+  const [devices, setDevices] = useState([]);
+  const [selectedDevice, setSelectedDevice] = useState('');
 
   // Sidebar handlers
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -63,7 +67,7 @@ export default function App() {
   // Fetch real sensor data from the database
   const loadDashboardData = useCallback(async () => {
     try {
-      const data = await fetchDashboardData();
+      const data = await fetchDashboardData(selectedDevice);
       setTimestamp(prev => {
         if (data.timestamp && prev && data.timestamp !== prev) {
           setShowSyncAlert(true);
@@ -90,7 +94,7 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedDevice]);
 
   const loadForecast = useCallback(async () => {
     try {
@@ -134,16 +138,31 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Initial load
     checkApiHealth();
     loadDashboardData();
     loadForecast();
+    
+    // Function to update device list
+    const updateDevices = () => {
+      fetchDevices()
+        .then(setDevices)
+        .catch(err => console.error('Devices load error:', err));
+    };
+    
+    updateDevices();
+
+    // Setup intervals
     const dashboardInterval = setInterval(loadDashboardData, 5000);
     const forecastInterval = setInterval(loadForecast, 60000);
     const healthInterval = setInterval(checkApiHealth, 15000);
+    const deviceInterval = setInterval(updateDevices, 30000); // Check for new devices every 30s
+
     return () => {
       clearInterval(dashboardInterval);
       clearInterval(forecastInterval);
       clearInterval(healthInterval);
+      clearInterval(deviceInterval);
     };
   }, [loadDashboardData, loadForecast, checkApiHealth]);
   
@@ -165,7 +184,14 @@ export default function App() {
           </svg>
         </button>
 
-        <Header apiStatus={apiStatus} sensorsCount={sensorsCount} lastUpdate={timestamp} />
+        <Header
+          apiStatus={apiStatus}
+          sensorsCount={sensorsCount}
+          lastUpdate={timestamp}
+          devices={devices}
+          selectedDevice={selectedDevice}
+          onDeviceChange={setSelectedDevice}
+        />
 
         {apiStatus === 'disconnected' && (
           <div className="connection-banner">
@@ -210,13 +236,16 @@ export default function App() {
                   error={forecastError} 
                 />
             </section>
+            <MapPanel sensors={sensors} loading={loading} />
           </>
         ) : activeTab === 'sensors' ? (
           <SensorDetailTab sensors={sensors} loading={loading} />
+        ) : activeTab === 'health' ? (
+          <HealthTab selectedDevice={selectedDevice} />
         ) : activeTab === 'raw-analysis' ? (
-          <RawAnalysisTab sensors={sensors} loading={loading} />
+          <RawAnalysisTab selectedDevice={selectedDevice} sensors={sensors} loading={loading} />
         ) : (
-          <YourDataTab sensors={sensors} loading={loading} />
+          <YourDataTab selectedDevice={selectedDevice} sensors={sensors} loading={loading} />
         )}
         {showSyncAlert && (
           <div className="data-forward-alert">

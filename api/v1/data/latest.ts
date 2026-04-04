@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import dbConnect from '../../lib/mongoose.js';
 import Sensor from '../../models/Sensor.js';
 
-const PA_URL = 'https://aqmrg.pythonanywhere.com/api/v1/data/latest';
+const PA_BASE = 'https://aqmrg.pythonanywhere.com/api/v1/data/latest';
 
 export default async function handler(
   request: VercelRequest,
@@ -25,7 +25,9 @@ export default async function handler(
     // 2. Fetch from PythonAnywhere (Primary Production Hardware Source)
     let paSensors: any[] = [];
     try {
-      const resp = await fetch(PA_URL, { signal: AbortSignal.timeout(5000) });
+      const deviceId = typeof request.query.device_id === 'string' ? request.query.device_id : '';
+      const paUrl = deviceId ? `${PA_BASE}?device_id=${deviceId}` : PA_BASE;
+      const resp = await fetch(paUrl, { signal: AbortSignal.timeout(5000) });
       if (resp.ok) {
         const data = await resp.json();
         paSensors = Array.isArray(data) ? data : (data.sensors || []);

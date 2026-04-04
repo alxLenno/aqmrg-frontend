@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function Header({ apiStatus, sensorsCount, lastUpdate }) {
+export default function Header({ apiStatus, sensorsCount, lastUpdate, devices = [], selectedDevice = '', onDeviceChange }) {
     const [time, setTime] = useState(new Date());
     const [syncCountdown, setSyncCountdown] = useState(null);
 
@@ -11,7 +11,6 @@ export default function Header({ apiStatus, sensorsCount, lastUpdate }) {
 
             if (lastUpdate) {
                 const lastDate = new Date(lastUpdate);
-                // Data arrives approximately every 5 minutes (300 seconds)
                 const nextExpected = new Date(lastDate.getTime() + 5 * 60 * 1000);
                 const diff = Math.floor((nextExpected - now) / 1000);
 
@@ -20,7 +19,6 @@ export default function Header({ apiStatus, sensorsCount, lastUpdate }) {
                     const s = diff % 60;
                     setSyncCountdown(`${m}m ${s}s`);
                 } else {
-                    // If diff is negative, we're waiting for data (overdue)
                     setSyncCountdown('Waiting for data...');
                 }
             }
@@ -48,6 +46,19 @@ export default function Header({ apiStatus, sensorsCount, lastUpdate }) {
                 </span>
             </div>
             <div className="topbar-right">
+                <div className="device-picker-container">
+                    <span className="picker-label">Sensor Node:</span>
+                    <select
+                        className="device-select"
+                        value={selectedDevice}
+                        onChange={(e) => onDeviceChange(e.target.value)}
+                    >
+                        <option value="">All Sensors (Fleet)</option>
+                        {devices.map(d => (
+                            <option key={d} value={d}>{d}</option>
+                        ))}
+                    </select>
+                </div>
                 {syncCountdown && (
                     <div className="sync-timer-badge">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>

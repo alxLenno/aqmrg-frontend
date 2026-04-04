@@ -7,8 +7,9 @@ const API_BASE = '/api';
  *
  * Returns: { timestamp, sensorsCount, sensors[] }
  */
-export async function fetchDashboardData() {
-    const response = await fetch(`${API_BASE}/v1/data/latest`);
+export async function fetchDashboardData(deviceId = '') {
+    const params = deviceId ? `?device_id=${deviceId}` : '';
+    const response = await fetch(`${API_BASE}/v1/data/latest${params}`);
     if (!response.ok) {
         throw new Error(`Dashboard API error: ${response.status}`);
     }
@@ -101,13 +102,17 @@ export async function fetchDashboardData() {
  * Returns: { location, forecast[], model }
  */
 export async function fetchForecast(location = 'Nairobi', hours = 4) {
-    const response = await fetch(
-        `${API_BASE}/v1/forecast/realtime`
-    );
-    if (!response.ok) {
-        throw new Error(`Forecast API error: ${response.status}`);
+    try {
+        const response = await fetch(`${API_BASE}/v1/forecast/realtime`);
+        if (!response.ok) {
+            console.warn(`Forecast API warning: ${response.status}`);
+            return null;
+        }
+        return await response.json();
+    } catch (err) {
+        console.error('Forecast fetch failed:', err);
+        return null;
     }
-    return response.json();
 }
 
 /**
@@ -126,8 +131,9 @@ export async function fetchForecastComparison() {
  * Fetch global historical data for EDA.
  * Endpoint: GET /api/v1/history/all
  */
-export async function fetchAllHistory(limit = 5000) {
-    const response = await fetch(`${API_BASE}/v1/history/all?limit=${limit}`);
+export async function fetchAllHistory(limit = 5000, deviceId = '') {
+    const params = deviceId ? `&device_id=${deviceId}` : '';
+    const response = await fetch(`${API_BASE}/v1/history/all?limit=${limit}${params}`);
     if (!response.ok) {
         throw new Error(`History API error: ${response.status}`);
     }
@@ -150,10 +156,10 @@ export async function fetchDataSummary() {
 /**
  * Fetch a sampled subset of historical data for efficient charting.
  */
-export async function fetchSampledHistory(limit = 200) {
+export async function fetchSampledHistory(limit = 200, deviceId = '') {
     // For now, we reuse fetchAllHistory with a smaller limit
     // In a production app, this would be a specialized aggregation endpoint
-    return fetchAllHistory(limit);
+    return fetchAllHistory(limit, deviceId);
 }
 
 /**
@@ -166,4 +172,48 @@ export async function checkHealth() {
         throw new Error(`Health check failed: ${response.status}`);
     }
     return response.json();
+}
+/**
+ * Fetch the list of all known device IDs.
+ * Endpoint: GET /api/v1/devices (proxied through PythonAnywhere)
+ */
+export async function fetchDevices() {
+    try {
+        const response = await fetch(`${API_BASE}/v1/devices`);
+        if (!response.ok) throw new Error(`Devices API: ${response.status}`);
+        const data = await response.json();
+        return Array.isArray(data.devices) ? data.devices : [];
+    } catch (err) {
+        console.error('Failed to fetch device list:', err);
+        return [];
+    }
+}
+
+/**
+ * Fetch device health diagnostics.
+ * Endpoint: GET /api/v1/health/latest
+ */
+export async function fetchHealthData(deviceId = '') {
+    const params = deviceId ? `?device_id=${deviceId}` : '';
+    const response = await fetch(`${API_BASE}/v1/health/latest${params}`);
+    if (!response.ok) {
+        throw new Error(`Health API error: ${response.status}`);
+    }
+    return response.json();
+}
+
+/**
+ * Build the CSV export URL for health data.
+ */
+export function getHealthExportUrl(deviceId = '') {
+    const params = deviceId ? `?device_id=${deviceId}` : '';
+    return `${API_BASE}/v1/health/export/csv${params}`;
+}
+
+/**
+ * Build the CSV export URL for sensor data.
+ */
+export function getDataExportUrl(deviceId = '') {
+    const params = deviceId ? `?device_id=${deviceId}` : '';
+    return `${API_BASE}/v1/data/export/csv${params}`;
 }

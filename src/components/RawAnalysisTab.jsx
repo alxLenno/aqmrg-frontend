@@ -17,7 +17,7 @@ import { fetchSampledHistory } from '../api/dashboard';
  * RawAnalysisTab — Deep-dive time-series exploration.
  * Supports Hourly, Daily, Weekly, Monthly, Yearly granularities.
  */
-export default function RawAnalysisTab() {
+export default function RawAnalysisTab({ selectedDevice }) {
     const [loading, setLoading] = useState(true);
     const [history, setHistory] = useState([]);
     const [activeBuckets, setActiveBuckets] = useState('daily'); // hourly, daily, weekly, monthly, yearly
@@ -54,7 +54,7 @@ export default function RawAnalysisTab() {
         async function load() {
             setLoading(true);
             try {
-                const data = await fetchSampledHistory(3000);
+                const data = await fetchSampledHistory(3000, selectedDevice);
                 if (mounted && data.length > 0) {
                     setHistory(data);
                     // Proactively set the selected date to the most recent record's date
@@ -73,7 +73,7 @@ export default function RawAnalysisTab() {
         }
         load();
         return () => { mounted = false; };
-    }, []);
+    }, [selectedDevice]);
 
     const aggregatedData = useMemo(() => {
         if (!history.length) return [];
