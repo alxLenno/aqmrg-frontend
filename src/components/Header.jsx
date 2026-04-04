@@ -55,7 +55,9 @@ export default function Header({ apiStatus, sensorsCount, lastUpdate, devices = 
                     >
                         <option value="">All Sensors (Fleet)</option>
                         {devices.map(d => (
-                            <option key={d} value={d}>{d}</option>
+                            <option key={d.device_id || d} value={d.device_id || d}>
+                                {d.name || d.device_id || d}
+                            </option>
                         ))}
                     </select>
                 </div>

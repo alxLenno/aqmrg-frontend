@@ -534,14 +534,24 @@ body {
 }
 
 .device-select {
-  background: transparent;
-  border: none;
+  background: var(--bg-card);
   color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  padding-right: 32px;
+  border-radius: 99px;
   font-size: 13px;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   outline: none;
-  padding: 4px 0;
+  backdrop-filter: blur(12px);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b9dc3' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: all 0.2s var(--ease);
 }
 
 .device-select option {
@@ -2815,26 +2825,7 @@ body {
 
 /* ── Device Selector ─────────────────── */
 
-.device-select {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-  padding: 6px 14px;
-  border-radius: 99px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  outline: none;
-  backdrop-filter: blur(12px);
-  transition: all 0.2s var(--ease);
-  -webkit-appearance: none;
-  appearance: none;
-  padding-right: 28px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b9dc3' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-}
+/* Consolidated into top level .device-select */
 
 .device-select:hover {
   border-color: var(--border-active);
@@ -3065,6 +3056,10 @@ body {
   border-color: var(--border);
   color: var(--text-primary);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 [data-theme="light"] .device-select option {

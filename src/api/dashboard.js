@@ -21,14 +21,15 @@ export async function fetchDashboardData(deviceId = '') {
 
     // Transform the list of readings into the format expected by the dashboard
     const sensors = rawData.map(reading => {
+        const dId = reading.device_id || 'UNKNOWN';
         const metrics = reading.metrics || reading.readings || reading.last_readings || {};
         const lastSeen = reading.timestamp || reading.last_seen || reading.recorded_at || new Date().toISOString();
 
         return {
-            id: reading.id,
-            device_id: reading.device_id,
-            controller_id: `CTRL-${reading.device_id.slice(-4)}`,
-            name: reading.name || reading.sensor_name || `Node ${reading.device_id.slice(-4)}`,
+            id: reading.id || dId,
+            device_id: dId,
+            controller_id: `CTRL-${dId.slice(-4)}`,
+            name: reading.name || reading.sensor_name || `Station ${dId.slice(-4) || '??'}`,
             manufacturer: reading.manufacturer || 'Custom',
             is_online: reading.is_online !== undefined ? reading.is_online : true,
             last_seen: lastSeen,

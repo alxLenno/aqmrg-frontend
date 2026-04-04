@@ -150,7 +150,7 @@ export default function App() {
           setDevices(devs);
           // Auto-select if only one real device exists and none selected
           if (devs.length === 1 && !selectedDevice) {
-            setSelectedDevice(devs[0]);
+            setSelectedDevice(devs[0].device_id);
           }
         })
         .catch(err => console.error('Devices load error:', err));
