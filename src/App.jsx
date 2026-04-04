@@ -146,7 +146,13 @@ export default function App() {
     // Function to update device list
     const updateDevices = () => {
       fetchDevices()
-        .then(setDevices)
+        .then(devs => {
+          setDevices(devs);
+          // Auto-select if only one real device exists and none selected
+          if (devs.length === 1 && !selectedDevice) {
+            setSelectedDevice(devs[0]);
+          }
+        })
         .catch(err => console.error('Devices load error:', err));
     };
     
@@ -156,7 +162,7 @@ export default function App() {
     const dashboardInterval = setInterval(loadDashboardData, 5000);
     const forecastInterval = setInterval(loadForecast, 60000);
     const healthInterval = setInterval(checkApiHealth, 15000);
-    const deviceInterval = setInterval(updateDevices, 30000); // Check for new devices every 30s
+    const deviceInterval = setInterval(updateDevices, 30000);
 
     return () => {
       clearInterval(dashboardInterval);
@@ -164,7 +170,7 @@ export default function App() {
       clearInterval(healthInterval);
       clearInterval(deviceInterval);
     };
-  }, [loadDashboardData, loadForecast, checkApiHealth]);
+  }, [loadDashboardData, loadForecast, checkApiHealth, selectedDevice]);
   
   return (
     <div className={`app ${isSidebarOpen ? 'sidebar-open' : ''}`}>
