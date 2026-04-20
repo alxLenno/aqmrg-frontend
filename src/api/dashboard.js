@@ -41,17 +41,10 @@ export async function fetchDashboardData(deviceId = '') {
                 sensors: ['PMS5003', 'MH-Z19C', 'SGP41', 'MQ-7', 'DHT11']
             },
             readings: {
-                pm1: metrics.pm1 ?? 0,
-                pm25: metrics.pm25 ?? 0,
-                pm10: metrics.pm10 ?? 0,
-                co: metrics.co ?? 0,
-                co2: metrics.co2 ?? 0,
-                temperature: metrics.temperature ?? 0,
-                humidity: metrics.humidity ?? 0,
-                voc_index: metrics.voc_index ?? 0,
-                nox_index: metrics.nox_index ?? 0,
+                ...metrics,
                 status: metrics.status || 'unknown'
             },
+
             last_readings: metrics
         };
     });

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { discoverMetrics, formatMetricLabel } from '../utils/metrics';
 
 /**
  * SensorList — displays the real sensor data from the PostgreSQL database.
@@ -8,6 +8,9 @@ import { useRef, useState, useEffect } from 'react';
 export default function SensorList({ sensors, loading, timestamp }) {
     const prevReadings = useRef({});
     
+    // Discovered keys for all sensors (used for alignment)
+    const activeMetricKeys = discoverMetrics(sensors);
+
     // Force re-render every second for the live timer
     const [now, setNow] = useState(new Date());
     useEffect(() => {
@@ -119,32 +122,22 @@ export default function SensorList({ sensors, loading, timestamp }) {
                                         )}
                                     </div>
 
-                                    <div className="measurement-grid">
-                                        <div className="measurement-item">
-                                            <span className="m-val">{readings.pm1 ?? '--'}</span>
-                                            <span className="m-label">PM1.0</span>
-                                        </div>
-                                        <div className="measurement-item">
-                                            <span className={`m-val ${status.className}`}>{readings.pm25 ?? '--'}</span>
-                                            <span className="m-label">PM2.5</span>
-                                        </div>
-                                        <div className="measurement-item">
-                                            <span className="m-val">{readings.pm10 ?? '--'}</span>
-                                            <span className="m-label">PM10</span>
-                                        </div>
-                                        <div className="measurement-item">
-                                            <span className="m-val">{readings.co ?? '--'}</span>
-                                            <span className="m-label">CO</span>
-                                        </div>
-                                        <div className="measurement-item">
-                                            <span className="m-val">{readings.co2 ?? '--'}</span>
-                                            <span className="m-label">CO₂</span>
-                                        </div>
-                                        <div className="measurement-item">
-                                            <span className="m-val">{readings.temperature ?? '--'}</span>
-                                            <span className="m-label">Temp</span>
-                                        </div>
+                                    <div className="measurement-grid" style={{ 
+                                      display: 'grid', 
+                                      gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))',
+                                      flex: '1',
+                                      padding: '0 20px'
+                                    }}>
+                                        {activeMetricKeys.map(key => (
+                                          <div key={key} className="measurement-item">
+                                              <span className={`m-val ${key === 'pm25' ? status.className : ''}`}>
+                                                {readings[key] ?? '--'}
+                                              </span>
+                                              <span className="m-label">{formatMetricLabel(key)}</span>
+                                          </div>
+                                        ))}
                                     </div>
+
 
                                     <div className="sensor-detail" style={{ minWidth: '120px', textAlign: 'right' }}>
                                         <span className="status-badge active" style={{ background: 'rgba(34, 197, 94, 0.15)' }}>

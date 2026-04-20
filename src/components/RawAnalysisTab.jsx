@@ -1,17 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
-import {
-    ComposedChart,
-    Line,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-    Area
-} from 'recharts';
-import { fetchSampledHistory } from '../api/dashboard';
+import { METRIC_CONFIG, formatMetricLabel, getMetricUnit, discoverMetrics } from '../utils/metrics';
 
 /**
  * RawAnalysisTab — Deep-dive time-series exploration.
@@ -21,6 +8,18 @@ export default function RawAnalysisTab({ selectedDevice }) {
     const [loading, setLoading] = useState(true);
     const [history, setHistory] = useState([]);
     const [activeBuckets, setActiveBuckets] = useState('daily'); // hourly, daily, weekly, monthly, yearly
+
+    // Discovered keys for the charts
+    const activeMetricKeys = useMemo(() => discoverMetrics(history), [history]);
+
+    const parameters = useMemo(() => {
+        return activeMetricKeys.map(key => ({
+            key,
+            label: formatMetricLabel(key),
+            unit: getMetricUnit(key),
+            color: METRIC_CONFIG[key]?.color || `hsl(${Math.random() * 360}, 70%, 50%)`
+        }));
+    }, [activeMetricKeys]);
     
     // Selectors state
     const [selectedDate, setSelectedDate] = useState(() => {
@@ -116,18 +115,13 @@ export default function RawAnalysisTab({ selectedDevice }) {
             // Show data as is
             return filtered.map((d, i) => {
                 const m = d.metrics || d;
-                return {
-                    name: d._date.toLocaleTimeString([], {minute:'2-digit', second:'2-digit'}),
-                    pm1: m.pm1 ?? m.pm1_0 ?? m.pm10_0 ?? 0,
-                    pm25: m.pm25 ?? m.pm2_5 ?? 0,
-                    pm10: m.pm10 ?? 0,
-                    co2: m.co2 ?? 0,
-                    co: m.co ?? 0,
-                    temp: m.temperature ?? m.temp ?? 0,
-                    hum: m.humidity ?? m.hum ?? 0,
-                    voc: m.voc_index ?? m.voc ?? 0,
-                    nox: m.nox_index ?? m.nox ?? 0
+                const entry = {
+                  name: d._date.toLocaleTimeString([], {minute:'2-digit', second:'2-digit'})
                 };
+                activeMetricKeys.forEach(k => {
+                  entry[k] = m[k] ?? 0;
+                });
+                return entry;
             });
         }
 
@@ -149,69 +143,43 @@ export default function RawAnalysisTab({ selectedDevice }) {
             }
 
             if (!groups[key]) {
-                groups[key] = { 
+                const group = { 
                     name: key, 
-                    pm1: [], pm25:[], pm10:[], 
-                    co2:[], co:[], temp:[], hum:[], 
-                    voc:[], nox:[],
                     sortKey: activeBuckets === 'monthly' ? dayOfMonth : 0 
                 };
+                activeMetricKeys.forEach(k => { group[k] = []; });
+                groups[key] = group;
             }
             const m = item.metrics || item;
             
-            const v_pm1 = m.pm1 ?? m.pm1_0 ?? m.pm10_0;
-            const v_pm25 = m.pm25 ?? m.pm2_5;
-            const v_pm10 = m.pm10;
-            const v_co2 = m.co2;
-            const v_co = m.co;
-            const v_temp = m.temperature ?? m.temp;
-            const v_hum = m.humidity ?? m.hum;
-            const v_voc = m.voc_index ?? m.voc;
-            const v_nox = m.nox_index ?? m.nox;
-
-            if (v_pm1 !== undefined && v_pm1 !== null) groups[key].pm1.push(Number(v_pm1));
-            if (v_pm25 !== undefined && v_pm25 !== null) groups[key].pm25.push(Number(v_pm25));
-            if (v_pm10 !== undefined && v_pm10 !== null) groups[key].pm10.push(Number(v_pm10));
-            if (v_co2 !== undefined && v_co2 !== null) groups[key].co2.push(Number(v_co2));
-            if (v_co !== undefined && v_co !== null) groups[key].co.push(Number(v_co));
-            if (v_temp !== undefined && v_temp !== null) groups[key].temp.push(Number(v_temp));
-            if (v_hum !== undefined && v_hum !== null) groups[key].hum.push(Number(v_hum));
-            if (v_voc !== undefined && v_voc !== null) groups[key].voc.push(Number(v_voc));
-            if (v_nox !== undefined && v_nox !== null) groups[key].nox.push(Number(v_nox));
+            activeMetricKeys.forEach(k => {
+              const val = m[k];
+              if (val !== undefined && val !== null) {
+                groups[key][k].push(Number(val));
+              }
+            });
         });
 
-        const result = Object.values(groups).map(g => ({
-            name: g.name,
-            sortKey: g.sortKey,
-            pm1: g.pm1.length ? (g.pm1.reduce((a,b)=>a+b,0)/g.pm1.length).toFixed(1) : 0,
-            pm25: g.pm25.length ? (g.pm25.reduce((a,b)=>a+b,0)/g.pm25.length).toFixed(1) : 0,
-            pm10: g.pm10.length ? (g.pm10.reduce((a,b)=>a+b,0)/g.pm10.length).toFixed(1) : 0,
-            co2: g.co2.length ? (g.co2.reduce((a,b)=>a+b,0)/g.co2.length).toFixed(0) : 0,
-            co: g.co.length ? (g.co.reduce((a,b)=>a+b,0)/g.co.length).toFixed(2) : 0,
-            temp: g.temp.length ? (g.temp.reduce((a,b)=>a+b,0)/g.temp.length).toFixed(1) : 0,
-            hum: g.hum.length ? (g.hum.reduce((a,b)=>a+b,0)/g.hum.length).toFixed(1) : 0,
-            voc: g.voc.length ? (g.voc.reduce((a,b)=>a+b,0)/g.voc.length).toFixed(0) : 0,
-            nox: g.nox.length ? (g.nox.reduce((a,b)=>a+b,0)/g.nox.length).toFixed(0) : 0,
-        }));
+        const result = Object.values(groups).map(g => {
+            const entry = {
+              name: g.name,
+              sortKey: g.sortKey
+            };
+            activeMetricKeys.forEach(k => {
+              const list = g[k];
+              const precision = (k === 'co' || k === 'o3') ? 2 : 1;
+              entry[k] = list.length ? (list.reduce((a,b)=>a+b,0)/list.length).toFixed(precision) : 0;
+            });
+            return entry;
+        });
 
         if (activeBuckets === 'monthly') {
             result.sort((a, b) => a.sortKey - b.sortKey);
         }
 
         return result;
-    }, [history, activeBuckets, selectedDate, selectedHour, selectedWeek, selectedMonth, selectedYear]);
+    }, [history, activeBuckets, selectedDate, selectedHour, selectedWeek, selectedMonth, selectedYear, activeMetricKeys]);
 
-    const parameters = [
-        { key: 'pm1', label: 'PM1.0 (Ultrafine)', unit: 'µg/m³', color: '#ec4899' },
-        { key: 'pm25', label: 'PM2.5 (Fine Particles)', unit: 'µg/m³', color: '#f43f5e' },
-        { key: 'pm10', label: 'PM10 (Coarse Particles)', unit: 'µg/m³', color: '#fbbf24' },
-        { key: 'co2', label: 'Carbon Dioxide (CO2)', unit: 'ppm', color: '#10b981' },
-        { key: 'co', label: 'Carbon Monoxide (CO)', unit: 'ppm', color: '#f59e0b' },
-        { key: 'temp', label: 'Temperature', unit: '°C', color: '#3b82f6' },
-        { key: 'hum', label: 'Humidity', unit: '%', color: '#a855f7' },
-        { key: 'voc', label: 'VOC Index', unit: 'index', color: '#8b5cf6' },
-        { key: 'nox', label: 'NOx Index', unit: 'index', color: '#06b6d4' }
-    ];
 
     if (loading) {
         return (

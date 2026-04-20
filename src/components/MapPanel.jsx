@@ -18,6 +18,8 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+import { discoverMetrics, formatMetricLabel, getMetricUnit } from '../utils/metrics';
+
 /**
  * Component to auto-fit the map to contain all sensor markers
  */
@@ -35,6 +37,9 @@ function ChangeView({ sensors }) {
 export default function MapPanel({ sensors, loading }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    
+    // Discover relevant metrics for popups
+    const activeMetricKeys = discoverMetrics(sensors);
 
     // CartoDB Tile Layers
     const lightTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
@@ -115,7 +120,8 @@ export default function MapPanel({ sensors, loading }) {
                     <ChangeView sensors={sensors} />
 
                     {sensors.map((sensor) => {
-                        const pm25 = sensor.readings?.pm25;
+                        const readings = sensor.readings || {};
+                        const pm25 = readings.pm25;
                         const statusColor = getStatusColor(pm25);
                         const customIcon = getCustomIcon(sensor);
                         
@@ -134,23 +140,17 @@ export default function MapPanel({ sensors, loading }) {
                                         <div className="popup-id">{sensor.device_id}</div>
                                         
                                         <div className="popup-grid">
-                                            <div className="popup-stat">
-                                                <label>PM2.5:</label>
-                                                <span style={{ color: statusColor }}>{pm25 ?? '--'}<small>µg/m³</small></span>
-                                            </div>
-                                            <div className="popup-stat">
-                                                <label>CO2:</label>
-                                                <span>{sensor.readings?.co2 ?? '--'}<small>ppm</small></span>
-                                            </div>
-                                            <div className="popup-stat">
-                                                <label>Temperature:</label>
-                                                <span>{sensor.readings?.temperature ?? '--'}<small>°C</small></span>
-                                            </div>
-                                            <div className="popup-stat">
-                                                <label>Humidity:</label>
-                                                <span>{sensor.readings?.humidity ?? '--'}<small>%</small></span>
-                                            </div>
+                                            {activeMetricKeys.slice(0, 6).map(key => (
+                                              <div key={key} className="popup-stat">
+                                                  <label>{formatMetricLabel(key)}:</label>
+                                                  <span style={key === 'pm25' ? { color: statusColor } : {}}>
+                                                    {readings[key] ?? '--'}
+                                                    <small>{getMetricUnit(key)}</small>
+                                                  </span>
+                                              </div>
+                                            ))}
                                         </div>
+
                                         
                                         <div className="popup-footer">
                                             <span className="tag-location">{sensor.location_name}</span>
