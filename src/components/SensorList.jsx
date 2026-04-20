@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react';
 import { discoverMetrics, formatMetricLabel } from '../utils/metrics';
 
 /**
