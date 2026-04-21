@@ -64,11 +64,15 @@ export default function RawAnalysisTab({ selectedDevice }) {
                     setHistory(data);
                     // Proactively set the selected date to the most recent record's date
                     const latest = data.reduce((a, b) => {
-                        const dateA = new Date(a.recorded_at || a.timestamp);
-                        const dateB = new Date(b.recorded_at || b.timestamp);
+                        const rawA = a.recorded_at || a.timestamp;
+                        const rawB = b.recorded_at || b.timestamp;
+                        const dateA = new Date(typeof rawA === 'string' ? rawA.replace(' ', 'T') : rawA);
+                        const dateB = new Date(typeof rawB === 'string' ? rawB.replace(' ', 'T') : rawB);
                         return dateA > dateB ? a : b;
                     });
-                    setSelectedDate(new Date(latest.recorded_at || latest.timestamp).toLocaleDateString('en-CA'));
+                    const rawLatest = latest.recorded_at || latest.timestamp;
+                    const d = new Date(typeof rawLatest === 'string' ? rawLatest.replace(' ', 'T') : rawLatest);
+                    setSelectedDate(!isNaN(d) ? d.toLocaleDateString('en-CA') : '1970-01-01');
                 }
             } catch (err) {
                 console.error("Analysis data fetch failed:", err);
@@ -82,11 +86,16 @@ export default function RawAnalysisTab({ selectedDevice }) {
 
     const aggregatedData = useMemo(() => {
         const historyList = Array.isArray(history) ? history : [];
-        let rawData = [...historyList].map(item => ({
-            ...item,
-            _date: new Date(item.recorded_at || item.timestamp),
-            _localDate: new Date(item.recorded_at || item.timestamp).toLocaleDateString('en-CA') // YYYY-MM-DD
-        }));
+        let rawData = [...historyList].map(item => {
+            const rawStr = item.recorded_at || item.timestamp;
+            const safeDateStr = typeof rawStr === 'string' ? rawStr.replace(' ', 'T') : rawStr;
+            const d = new Date(safeDateStr);
+            return {
+                ...item,
+                _date: d,
+                _localDate: !isNaN(d) ? d.toLocaleDateString('en-CA') : '1970-01-01'
+            };
+        });
 
         // 1. FILTERING
         let filtered = rawData;
