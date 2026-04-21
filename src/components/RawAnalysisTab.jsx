@@ -27,9 +27,17 @@ export default function RawAnalysisTab({ selectedDevice }) {
         }));
     }, [activeMetricKeys]);
     
+    // Helper for robust YYYY-MM-DD
+    const formatDateISO = (d) => {
+        if (!d || isNaN(d)) return '1970-01-01';
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     // Selectors state
     const [selectedDate, setSelectedDate] = useState(() => {
-        // Find most recent date in history if possible, else today
         return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
     });
 
@@ -62,17 +70,21 @@ export default function RawAnalysisTab({ selectedDevice }) {
                 const data = await fetchSampledHistory(3000, selectedDevice);
                 if (mounted && data.length > 0) {
                     setHistory(data);
-                    // Proactively set the selected date to the most recent record's date
-                    const latest = data.reduce((a, b) => {
+                    
+                    // Find the latest record to initialize the date picker
+                    const latestRecord = data.reduce((a, b) => {
                         const rawA = a.recorded_at || a.timestamp;
                         const rawB = b.recorded_at || b.timestamp;
                         const dateA = new Date(typeof rawA === 'string' ? rawA.replace(' ', 'T') : rawA);
                         const dateB = new Date(typeof rawB === 'string' ? rawB.replace(' ', 'T') : rawB);
                         return dateA > dateB ? a : b;
                     });
-                    const rawLatest = latest.recorded_at || latest.timestamp;
+
+                    const rawLatest = latestRecord.recorded_at || latestRecord.timestamp;
                     const d = new Date(typeof rawLatest === 'string' ? rawLatest.replace(' ', 'T') : rawLatest);
-                    setSelectedDate(!isNaN(d) ? d.toLocaleDateString('en-CA') : '1970-01-01');
+                    if (!isNaN(d)) {
+                        setSelectedDate(formatDateISO(d));
+                    }
                 }
             } catch (err) {
                 console.error("Analysis data fetch failed:", err);
@@ -86,14 +98,16 @@ export default function RawAnalysisTab({ selectedDevice }) {
 
     const aggregatedData = useMemo(() => {
         const historyList = Array.isArray(history) ? history : [];
-        let rawData = [...historyList].map(item => {
+        if (historyList.length === 0) return [];
+
+        let rawData = historyList.map(item => {
             const rawStr = item.recorded_at || item.timestamp;
             const safeDateStr = typeof rawStr === 'string' ? rawStr.replace(' ', 'T') : rawStr;
             const d = new Date(safeDateStr);
             return {
                 ...item,
                 _date: d,
-                _localDate: !isNaN(d) ? d.toLocaleDateString('en-CA') : '1970-01-01'
+                _localDate: formatDateISO(d)
             };
         });
 
@@ -102,10 +116,18 @@ export default function RawAnalysisTab({ selectedDevice }) {
         if (activeBuckets === 'hourly') {
             filtered = rawData.filter(d => 
                 d._localDate === selectedDate && 
-                d._date.getHours() === Number(selectedHour)
+                d._date.getHours() === parseInt(selectedHour)
             );
         } else if (activeBuckets === 'daily') {
             filtered = rawData.filter(d => d._localDate === selectedDate);
+            
+            // FALLBACK: If no data for selectedDate, show most recent day available in this fetch range
+            if (filtered.length === 0 && rawData.length > 0) {
+                const availableDates = [...new Set(rawData.map(r => r._localDate))].sort().reverse();
+                if (availableDates.length > 0) {
+                    filtered = rawData.filter(d => d._localDate === availableDates[0]);
+                }
+            }
         } else if (activeBuckets === 'weekly') {
             filtered = rawData.filter(d => {
                 const date = d._date;
